@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![ChatPlot Logo](docs/images/logo.png)
+![ChatPlot Logo](assets/logo.png)
 
 [![Python Version](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
 [![React](https://img.shields.io/badge/react-18.2.0-61dafb.svg)](https://reactjs.org/)
@@ -157,7 +157,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- Project Lead - [Jian Zhou](mailto:zhouj@ucas.ac.cn)
+- Project Lead - [Your Name](mailto:your.email@example.com)
+- Project Website: [https://chatplot.example.com](https://chatplot.example.com)
 
 ---
 

@@ -1,0 +1,11 @@
+Date,Product,Category,Quantity,Price,Total
+2024-01-01,Laptop,Electronics,5,999.99,4999.95
+2024-01-01,Mouse,Electronics,10,29.99,299.90
+2024-01-02,Keyboard,Electronics,8,49.99,399.92
+2024-01-02,Monitor,Electronics,3,299.99,899.97
+2024-01-03,Headphones,Electronics,15,79.99,1199.85
+2024-01-03,USB Drive,Electronics,20,19.99,399.80
+2024-01-04,Printer,Electronics,2,199.99,399.98
+2024-01-04,Tablet,Electronics,4,499.99,1999.96
+2024-01-05,Smartphone,Electronics,6,699.99,4199.94
+2024-01-05,Camera,Electronics,3,599.99,1799.97 
