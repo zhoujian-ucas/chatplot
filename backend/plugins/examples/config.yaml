@@ -1,0 +1,25 @@
+waterfall_chart:
+  colors:
+    positive: "#2ecc71"
+    negative: "#e74c3c"
+    total: "#3498db"
+  show_totals: true
+  show_connectors: true
+
+time_series_processor:
+  decomposition_model: "additive"
+  seasonal_period: 12
+  outlier_threshold: 3.0
+
+market_basket_analyzer:
+  min_support: 0.01
+  min_confidence: 0.5
+  min_lift: 1.2
+  max_length: 3
+
+anomaly_detector:
+  contamination: 0.1
+  n_estimators: 100
+  max_samples: "auto"
+  random_state: 42
+  model_path: "models/anomaly_detector" 

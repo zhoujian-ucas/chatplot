@@ -1,378 +1,334 @@
 import pandas as pd
 import numpy as np
-from typing import Dict, Any, List, Optional, Union, Tuple
-import logging
-import json
-from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 from scipy import stats
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from config import settings
-
-logger = logging.getLogger(__name__)
+from sklearn.cluster import KMeans
+import logging
 
 class DataService:
-    def __init__(self, data_dir: str = settings.UPLOAD_DIR):
-        self.data_dir = Path(data_dir)
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self):
         self.current_data: Optional[pd.DataFrame] = None
-        self.scaler = StandardScaler()
-        self.cached_analyses: Dict[str, Any] = {}
+        self.data_info: Dict = {}
+        self.logger = logging.getLogger(__name__)
 
-    def load_data(
-        self,
-        file_path: Union[str, Path],
-        file_type: Optional[str] = None,
-        **kwargs
-    ) -> pd.DataFrame:
-        """
-        Load data from various file formats with enhanced error handling and type inference
-        """
+    def load_data(self, file_path: str, file_type: Optional[str] = None) -> Dict:
+        """Load data from various file formats."""
         try:
-            file_path = Path(file_path)
-            if file_type is None:
-                file_type = file_path.suffix.lower()
-
-            # Default options for data loading
-            load_options = {
-                'parse_dates': True,
-                'infer_datetime_format': True,
-                'low_memory': False,
-                **kwargs
-            }
-
-            if file_type in ['.csv', '.txt']:
-                data = pd.read_csv(file_path, **load_options)
-            elif file_type in ['.xlsx', '.xls']:
-                data = pd.read_excel(file_path, **load_options)
-            elif file_type == '.json':
-                data = pd.read_json(file_path, **load_options)
+            if file_type == 'csv' or file_path.endswith('.csv'):
+                self.current_data = pd.read_csv(file_path)
+            elif file_type == 'excel' or file_path.endswith(('.xls', '.xlsx')):
+                self.current_data = pd.read_excel(file_path)
+            elif file_type == 'json' or file_path.endswith('.json'):
+                self.current_data = pd.read_json(file_path)
+            elif file_path.endswith('.parquet'):
+                self.current_data = pd.read_parquet(file_path)
+            elif file_path.endswith('.feather'):
+                self.current_data = pd.read_feather(file_path)
             else:
                 raise ValueError(f"Unsupported file type: {file_type}")
 
-            # Automatic data cleaning and type inference
-            data = self._clean_and_infer_types(data)
-            self.current_data = data
-            return data
-
+            self.data_info = self._analyze_data_structure()
+            return self.data_info
         except Exception as e:
-            logger.error(f"Error loading data: {str(e)}")
+            self.logger.error(f"Error loading data: {str(e)}")
             raise
 
-    def process_data(
-        self,
-        data: pd.DataFrame,
-        operations: List[Dict[str, Any]]
-    ) -> pd.DataFrame:
-        """
-        Process data with enhanced operations and error handling
-        """
-        try:
-            processed_data = data.copy()
+    def _analyze_data_structure(self) -> Dict:
+        """Analyze the structure and properties of the loaded data."""
+        if self.current_data is None:
+            raise ValueError("No data loaded")
 
-            for operation in operations:
-                op_type = operation.get("type")
-                params = operation.get("params", {})
+        info = {
+            "shape": self.current_data.shape,
+            "columns": self.current_data.columns.tolist(),
+            "dtypes": self.current_data.dtypes.astype(str).to_dict(),
+            "missing_values": self.current_data.isnull().sum().to_dict(),
+            "numeric_columns": self.current_data.select_dtypes(include=[np.number]).columns.tolist(),
+            "categorical_columns": self.current_data.select_dtypes(include=['object', 'category']).columns.tolist(),
+            "datetime_columns": self.current_data.select_dtypes(include=['datetime64']).columns.tolist(),
+            "unique_counts": {col: self.current_data[col].nunique() for col in self.current_data.columns},
+            "memory_usage": self.current_data.memory_usage(deep=True).sum()
+        }
 
-                if op_type == "filter":
-                    processed_data = self._apply_filter(processed_data, params)
-                elif op_type == "sort":
-                    processed_data = processed_data.sort_values(**params)
-                elif op_type == "group":
-                    processed_data = self._apply_grouping(processed_data, params)
-                elif op_type == "transform":
-                    processed_data = self._apply_transform(processed_data, params)
-                elif op_type == "aggregate":
-                    processed_data = self._apply_aggregation(processed_data, params)
-                elif op_type == "clean":
-                    processed_data = self._apply_cleaning(processed_data, params)
-                else:
-                    raise ValueError(f"Unsupported operation type: {op_type}")
+        # Add basic statistics for numeric columns
+        if info["numeric_columns"]:
+            info["numeric_summary"] = self.current_data[info["numeric_columns"]].describe().to_dict()
 
-            return processed_data
-
-        except Exception as e:
-            logger.error(f"Error processing data: {str(e)}")
-            raise
-
-    def get_data_summary(
-        self,
-        data: Optional[pd.DataFrame] = None,
-        detailed: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Generate comprehensive data summary with statistical analysis
-        """
-        try:
-            if data is None:
-                data = self.current_data
-            if data is None:
-                raise ValueError("No data available")
-
-            numeric_columns = data.select_dtypes(include=[np.number]).columns
-            categorical_columns = data.select_dtypes(exclude=[np.number]).columns
-            datetime_columns = data.select_dtypes(include=['datetime64']).columns
-
-            summary = {
-                "shape": data.shape,
-                "columns": list(data.columns),
-                "numeric_columns": list(numeric_columns),
-                "categorical_columns": list(categorical_columns),
-                "datetime_columns": list(datetime_columns),
-                "missing_values": data.isnull().sum().to_dict(),
-                "numeric_summary": data[numeric_columns].describe().to_dict() if len(numeric_columns) > 0 else {},
-                "categorical_summary": {
-                    col: data[col].value_counts().to_dict()
-                    for col in categorical_columns
-                }
+        # Add categorical summaries
+        if info["categorical_columns"]:
+            info["categorical_summary"] = {
+                col: self.current_data[col].value_counts().head().to_dict()
+                for col in info["categorical_columns"]
             }
 
-            if detailed:
-                summary.update({
-                    "correlations": self._calculate_correlations(data),
-                    "outliers": self._detect_outliers(data),
-                    "distributions": self._analyze_distributions(data),
-                    "trends": self._analyze_trends(data),
-                    "data_quality": self._assess_data_quality(data)
-                })
+        return info
 
-            return summary
+    def process_data(self, operations: List[Dict]) -> pd.DataFrame:
+        """Apply a series of data processing operations."""
+        if self.current_data is None:
+            raise ValueError("No data loaded")
 
-        except Exception as e:
-            logger.error(f"Error generating data summary: {str(e)}")
-            raise
+        df = self.current_data.copy()
 
-    def _clean_and_infer_types(self, data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Clean data and infer correct data types
-        """
-        # Remove completely empty columns and rows
-        data = data.dropna(how='all', axis=1).dropna(how='all', axis=0)
-
-        for column in data.columns:
-            # Try to convert to numeric
+        for op in operations:
             try:
-                data[column] = pd.to_numeric(data[column])
-                continue
-            except (ValueError, TypeError):
-                pass
+                op_type = op.get("type")
+                if op_type == "filter":
+                    df = self._apply_filter(df, op)
+                elif op_type == "transform":
+                    df = self._apply_transform(df, op)
+                elif op_type == "aggregate":
+                    df = self._apply_aggregation(df, op)
+                elif op_type == "sort":
+                    df = self._apply_sort(df, op)
+                elif op_type == "clean":
+                    df = self._apply_cleaning(df, op)
+            except Exception as e:
+                self.logger.error(f"Error processing operation {op_type}: {str(e)}")
+                raise
 
-            # Try to convert to datetime
-            try:
-                data[column] = pd.to_datetime(data[column])
-                continue
-            except (ValueError, TypeError):
-                pass
+        self.current_data = df
+        return df
 
-            # Clean string columns
-            if data[column].dtype == object:
-                data[column] = data[column].astype(str).str.strip()
+    def _apply_filter(self, df: pd.DataFrame, op: Dict) -> pd.DataFrame:
+        """Apply filtering operations."""
+        column = op.get("column")
+        condition = op.get("condition")
+        value = op.get("value")
 
-        return data
+        if condition == "equals":
+            return df[df[column] == value]
+        elif condition == "not_equals":
+            return df[df[column] != value]
+        elif condition == "greater_than":
+            return df[df[column] > value]
+        elif condition == "less_than":
+            return df[df[column] < value]
+        elif condition == "in":
+            return df[df[column].isin(value)]
+        elif condition == "not_in":
+            return df[~df[column].isin(value)]
+        elif condition == "contains":
+            return df[df[column].str.contains(value, na=False)]
+        elif condition == "between":
+            return df[(df[column] >= value[0]) & (df[column] <= value[1])]
+        else:
+            raise ValueError(f"Unknown filter condition: {condition}")
 
-    def _apply_filter(
-        self,
-        data: pd.DataFrame,
-        params: Dict[str, Any]
-    ) -> pd.DataFrame:
-        """
-        Apply advanced filtering with multiple conditions
-        """
-        if "query" in params:
-            return data.query(params["query"])
-        elif "conditions" in params:
-            mask = pd.Series(True, index=data.index)
-            for condition in params["conditions"]:
-                column = condition["column"]
-                operator = condition["operator"]
-                value = condition["value"]
+    def _apply_transform(self, df: pd.DataFrame, op: Dict) -> pd.DataFrame:
+        """Apply transformation operations."""
+        transform_type = op.get("transform_type")
+        columns = op.get("columns")
 
-                if operator == "equals":
-                    mask &= data[column] == value
-                elif operator == "contains":
-                    mask &= data[column].str.contains(value, na=False)
-                elif operator == "greater_than":
-                    mask &= data[column] > value
-                elif operator == "less_than":
-                    mask &= data[column] < value
-                elif operator == "between":
-                    mask &= (data[column] >= value[0]) & (data[column] <= value[1])
-
-            return data[mask]
-        return data
-
-    def _apply_grouping(
-        self,
-        data: pd.DataFrame,
-        params: Dict[str, Any]
-    ) -> pd.DataFrame:
-        """
-        Apply advanced grouping with multiple aggregations
-        """
-        grouped = data.groupby(**params)
-        if "aggs" in params:
-            return grouped.agg(params["aggs"])
-        return grouped.agg(params.get("agg", "mean"))
-
-    def _apply_transform(
-        self,
-        data: pd.DataFrame,
-        params: Dict[str, Any]
-    ) -> pd.DataFrame:
-        """
-        Apply data transformations
-        """
-        if params.get("type") == "normalize":
-            columns = params.get("columns", data.select_dtypes(include=[np.number]).columns)
-            data[columns] = self.scaler.fit_transform(data[columns])
-        elif params.get("type") == "pca":
-            columns = params.get("columns", data.select_dtypes(include=[np.number]).columns)
-            n_components = params.get("n_components", 2)
+        if transform_type == "standardize":
+            scaler = StandardScaler()
+            df[columns] = scaler.fit_transform(df[columns])
+        elif transform_type == "log":
+            df[columns] = np.log1p(df[columns])
+        elif transform_type == "one_hot":
+            df = pd.get_dummies(df, columns=columns)
+        elif transform_type == "bin":
+            bins = op.get("bins", 10)
+            for col in columns:
+                df[f"{col}_binned"] = pd.qcut(df[col], bins, labels=False)
+        elif transform_type == "pca":
+            n_components = op.get("n_components", 2)
             pca = PCA(n_components=n_components)
-            transformed = pca.fit_transform(data[columns])
+            transformed = pca.fit_transform(df[columns])
             for i in range(n_components):
-                data[f"PC{i+1}"] = transformed[:, i]
-        return data
+                df[f"PC{i+1}"] = transformed[:, i]
+        else:
+            raise ValueError(f"Unknown transform type: {transform_type}")
 
-    def _calculate_correlations(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """
-        Calculate various correlation metrics
-        """
-        numeric_data = data.select_dtypes(include=[np.number])
-        if numeric_data.empty:
+        return df
+
+    def _apply_aggregation(self, df: pd.DataFrame, op: Dict) -> pd.DataFrame:
+        """Apply aggregation operations."""
+        group_by = op.get("group_by")
+        agg_functions = op.get("functions", {})
+        return df.groupby(group_by).agg(agg_functions).reset_index()
+
+    def _apply_sort(self, df: pd.DataFrame, op: Dict) -> pd.DataFrame:
+        """Apply sorting operations."""
+        columns = op.get("columns")
+        ascending = op.get("ascending", True)
+        return df.sort_values(columns, ascending=ascending)
+
+    def _apply_cleaning(self, df: pd.DataFrame, op: Dict) -> pd.DataFrame:
+        """Apply data cleaning operations."""
+        clean_type = op.get("clean_type")
+        columns = op.get("columns")
+
+        if clean_type == "drop_na":
+            return df.dropna(subset=columns)
+        elif clean_type == "fill_na":
+            method = op.get("method", "mean")
+            for col in columns:
+                if method == "mean":
+                    df[col].fillna(df[col].mean(), inplace=True)
+                elif method == "median":
+                    df[col].fillna(df[col].median(), inplace=True)
+                elif method == "mode":
+                    df[col].fillna(df[col].mode()[0], inplace=True)
+                elif method == "forward":
+                    df[col].fillna(method="ffill", inplace=True)
+                elif method == "backward":
+                    df[col].fillna(method="bfill", inplace=True)
+        elif clean_type == "remove_outliers":
+            method = op.get("method", "zscore")
+            threshold = op.get("threshold", 3)
+            for col in columns:
+                if method == "zscore":
+                    z_scores = np.abs(stats.zscore(df[col]))
+                    df = df[z_scores < threshold]
+                elif method == "iqr":
+                    Q1 = df[col].quantile(0.25)
+                    Q3 = df[col].quantile(0.75)
+                    IQR = Q3 - Q1
+                    df = df[~((df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR)))]
+        elif clean_type == "drop_duplicates":
+            df = df.drop_duplicates(subset=columns)
+
+        return df
+
+    def analyze_patterns(self, columns: Optional[List[str]] = None) -> Dict:
+        """Analyze patterns in the data."""
+        if self.current_data is None:
+            raise ValueError("No data loaded")
+
+        df = self.current_data[columns] if columns else self.current_data
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+
+        patterns = {
+            "correlation": self._analyze_correlation(df, numeric_cols),
+            "trends": self._analyze_trends(df, numeric_cols),
+            "clusters": self._analyze_clusters(df, numeric_cols),
+            "seasonality": self._analyze_seasonality(df),
+            "anomalies": self._detect_anomalies(df, numeric_cols)
+        }
+
+        return patterns
+
+    def _analyze_correlation(self, df: pd.DataFrame, numeric_cols: List[str]) -> Dict:
+        """Analyze correlations between numeric columns."""
+        if len(numeric_cols) < 2:
             return {}
 
+        corr_matrix = df[numeric_cols].corr()
+        strong_correlations = []
+
+        for i in range(len(numeric_cols)):
+            for j in range(i + 1, len(numeric_cols)):
+                corr = corr_matrix.iloc[i, j]
+                if abs(corr) > 0.7:
+                    strong_correlations.append({
+                        "columns": (numeric_cols[i], numeric_cols[j]),
+                        "correlation": corr
+                    })
+
         return {
-            "pearson": numeric_data.corr(method='pearson').to_dict(),
-            "spearman": numeric_data.corr(method='spearman').to_dict(),
-            "kendall": numeric_data.corr(method='kendall').to_dict()
+            "correlation_matrix": corr_matrix.to_dict(),
+            "strong_correlations": strong_correlations
         }
 
-    def _detect_outliers(
-        self,
-        data: pd.DataFrame,
-        threshold: float = 1.5
-    ) -> Dict[str, List[int]]:
-        """
-        Detect outliers using IQR method
-        """
-        outliers = {}
-        numeric_columns = data.select_dtypes(include=[np.number]).columns
-
-        for column in numeric_columns:
-            Q1 = data[column].quantile(0.25)
-            Q3 = data[column].quantile(0.75)
-            IQR = Q3 - Q1
-            outlier_mask = (
-                (data[column] < (Q1 - threshold * IQR)) |
-                (data[column] > (Q3 + threshold * IQR))
-            )
-            if outlier_mask.any():
-                outliers[column] = list(data.index[outlier_mask])
-
-        return outliers
-
-    def _analyze_distributions(self, data: pd.DataFrame) -> Dict[str, Dict[str, float]]:
-        """
-        Analyze distributions of numeric columns
-        """
-        distributions = {}
-        numeric_columns = data.select_dtypes(include=[np.number]).columns
-
-        for column in numeric_columns:
-            if data[column].nunique() > 1:
-                distributions[column] = {
-                    "skewness": float(stats.skew(data[column].dropna())),
-                    "kurtosis": float(stats.kurtosis(data[column].dropna())),
-                    "normality_test": float(stats.normaltest(data[column].dropna())[1])
-                }
-
-        return distributions
-
-    def _analyze_trends(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """
-        Analyze trends in time series data
-        """
+    def _analyze_trends(self, df: pd.DataFrame, numeric_cols: List[str]) -> Dict:
+        """Analyze trends in numeric columns."""
         trends = {}
-        datetime_columns = data.select_dtypes(include=['datetime64']).columns
-        numeric_columns = data.select_dtypes(include=[np.number]).columns
-
-        if not datetime_columns.empty and not numeric_columns.empty:
-            date_col = datetime_columns[0]
-            for num_col in numeric_columns:
-                # Simple linear regression
-                x = np.arange(len(data))
-                y = data[num_col].values
-                slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
-                
-                trends[num_col] = {
-                    "slope": float(slope),
-                    "r_squared": float(r_value ** 2),
-                    "p_value": float(p_value)
+        for col in numeric_cols:
+            series = df[col].dropna()
+            if len(series) > 1:
+                slope, intercept, r_value, p_value, std_err = stats.linregress(range(len(series)), series)
+                trends[col] = {
+                    "slope": slope,
+                    "r_squared": r_value ** 2,
+                    "p_value": p_value,
+                    "trend_direction": "increasing" if slope > 0 else "decreasing"
                 }
-
         return trends
 
-    def _assess_data_quality(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """
-        Assess overall data quality
-        """
-        total_cells = data.shape[0] * data.shape[1]
-        missing_cells = data.isnull().sum().sum()
-        
+    def _analyze_clusters(self, df: pd.DataFrame, numeric_cols: List[str]) -> Dict:
+        """Analyze clusters in numeric data."""
+        if len(numeric_cols) < 2:
+            return {}
+
+        # Standardize the data
+        scaler = StandardScaler()
+        scaled_data = scaler.fit_transform(df[numeric_cols])
+
+        # Determine optimal number of clusters (up to 5)
+        max_clusters = min(5, len(df) - 1)
+        inertias = []
+        for k in range(1, max_clusters + 1):
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(scaled_data)
+            inertias.append(kmeans.inertia_)
+
+        # Find elbow point
+        optimal_clusters = 2  # default
+        for i in range(1, len(inertias) - 1):
+            if (inertias[i-1] - inertias[i]) / (inertias[i] - inertias[i+1]) < 0.5:
+                optimal_clusters = i + 1
+                break
+
+        # Perform clustering with optimal number of clusters
+        kmeans = KMeans(n_clusters=optimal_clusters, random_state=42)
+        clusters = kmeans.fit_predict(scaled_data)
+
         return {
-            "completeness": 1 - (missing_cells / total_cells),
-            "duplicates": len(data[data.duplicated()]),
-            "zero_variance_columns": list(data.columns[data.std() == 0]),
-            "high_cardinality_columns": [
-                col for col in data.select_dtypes(include=['object']).columns
-                if data[col].nunique() / len(data) > 0.5
-            ]
+            "optimal_clusters": optimal_clusters,
+            "cluster_sizes": np.bincount(clusters).tolist(),
+            "cluster_centers": kmeans.cluster_centers_.tolist(),
+            "inertia": kmeans.inertia_
         }
 
-    def save_data(
-        self,
-        data: pd.DataFrame,
-        file_name: str,
-        file_type: str = "csv"
-    ) -> str:
-        """
-        Save data to a file
-        """
-        try:
-            file_path = self.data_dir / f"{file_name}.{file_type}"
-            
-            if file_type == "csv":
-                data.to_csv(file_path, index=False)
-            elif file_type == "excel":
-                data.to_excel(file_path, index=False)
-            elif file_type == "json":
-                data.to_json(file_path)
-            else:
-                raise ValueError(f"Unsupported file type: {file_type}")
+    def _analyze_seasonality(self, df: pd.DataFrame) -> Dict:
+        """Analyze seasonality in time series data."""
+        datetime_cols = df.select_dtypes(include=['datetime64']).columns
+        seasonality = {}
 
-            return str(file_path)
+        for col in datetime_cols:
+            if len(df[col].dropna()) > 0:
+                seasonality[col] = {
+                    "daily": self._check_daily_pattern(df, col),
+                    "weekly": self._check_weekly_pattern(df, col),
+                    "monthly": self._check_monthly_pattern(df, col)
+                }
 
-        except Exception as e:
-            logger.error(f"Error saving data: {str(e)}")
-            raise
+        return seasonality
 
-    def get_correlation_matrix(
-        self,
-        data: Optional[pd.DataFrame] = None
-    ) -> pd.DataFrame:
-        """
-        Calculate correlation matrix for numeric columns
-        """
-        try:
-            if data is None:
-                data = self.current_data
-            if data is None:
-                raise ValueError("No data available")
+    def _detect_anomalies(self, df: pd.DataFrame, numeric_cols: List[str]) -> Dict:
+        """Detect anomalies in numeric columns."""
+        anomalies = {}
+        for col in numeric_cols:
+            series = df[col].dropna()
+            if len(series) > 0:
+                z_scores = np.abs(stats.zscore(series))
+                anomalies[col] = {
+                    "count": np.sum(z_scores > 3),
+                    "indices": np.where(z_scores > 3)[0].tolist(),
+                    "values": series[z_scores > 3].tolist()
+                }
+        return anomalies
 
-            numeric_data = data.select_dtypes(include=[np.number])
-            return numeric_data.corr()
+    def _check_daily_pattern(self, df: pd.DataFrame, datetime_col: str) -> Dict:
+        """Check for daily patterns in time series data."""
+        df['hour'] = df[datetime_col].dt.hour
+        hourly_stats = df.groupby('hour').agg(['mean', 'std']).to_dict()
+        df.drop('hour', axis=1, inplace=True)
+        return hourly_stats
 
-        except Exception as e:
-            logger.error(f"Error calculating correlation matrix: {str(e)}")
-            raise 
+    def _check_weekly_pattern(self, df: pd.DataFrame, datetime_col: str) -> Dict:
+        """Check for weekly patterns in time series data."""
+        df['dayofweek'] = df[datetime_col].dt.dayofweek
+        daily_stats = df.groupby('dayofweek').agg(['mean', 'std']).to_dict()
+        df.drop('dayofweek', axis=1, inplace=True)
+        return daily_stats
+
+    def _check_monthly_pattern(self, df: pd.DataFrame, datetime_col: str) -> Dict:
+        """Check for monthly patterns in time series data."""
+        df['month'] = df[datetime_col].dt.month
+        monthly_stats = df.groupby('month').agg(['mean', 'std']).to_dict()
+        df.drop('month', axis=1, inplace=True)
+        return monthly_stats 

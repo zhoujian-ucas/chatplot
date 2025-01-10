@@ -1,249 +1,167 @@
-# ChatPlot
+# ChatPlot 🚀
 
 <div align="center">
 
-![ChatPlot Logo](docs/images/logo.png)
+![ChatPlot Logo](assets/logo.png)
 
-[![Python Version](https://img.shields.io/badge/python-3.10-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
+[![React](https://img.shields.io/badge/react-18.2.0-61dafb.svg)](https://reactjs.org/)
+[![FastAPI](https://img.shields.io/badge/fastapi-0.104.1-009688.svg)](https://fastapi.tiangolo.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+*An intelligent chat-based data visualization and analysis platform powered by Ollama* 🤖
+
+[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Contributing](#contributing)
 
 </div>
-
-ChatPlot is an intelligent data analysis and visualization platform that combines natural language chat interface with powerful data processing capabilities. It enables users to analyze and visualize data through intuitive conversations, powered by Ollama's local LLM technology.
 
 ## ✨ Features
 
 ### 🤖 Intelligent Chat Interface
-- Natural language data analysis queries
+- Natural language data analysis requests
 - Context-aware conversations
-- Automated insights generation
 - Smart visualization suggestions
+- Interactive data exploration
 
 ### 📊 Advanced Data Analysis
-- Support for multiple data formats (CSV, Excel, JSON)
-- Automated data cleaning and preprocessing
-- Statistical analysis and pattern detection
-- Correlation analysis and trend identification
+- Time series analysis
+- Pattern recognition
+- Anomaly detection
+- Market basket analysis
+- Statistical computations
 
 ### 📈 Interactive Visualizations
-- Real-time interactive charts
-- Multiple visualization types
-- Customizable chart options
+- Dynamic chart generation
+- Multiple chart types
+- Customizable styling
+- Real-time updates
 - Export capabilities
 
-### 🛠 Technical Features
-- Local LLM integration with Ollama
-- Real-time data processing
-- Automated health monitoring
-- Cross-platform compatibility
+### 🔌 Plugin System
+- Extensible architecture
+- Custom visualization plugins
+- Data processing plugins
+- Analysis plugins
+- Model plugins
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-
-- [Anaconda](https://www.anaconda.com/download) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-- [Git](https://git-scm.com/downloads)
-- [Ollama](https://ollama.ai/download) with llama2 model
+- Python 3.10 or higher
+- Node.js 18 or higher
+- Ollama
+- Conda (recommended)
 
 ### Installation
 
-1. Clone the repository:
+1. Clone the repository
 ```bash
 git clone https://github.com/yourusername/chatplot.git
 cd chatplot
 ```
 
-2. One-click setup and run:
-```bash
-python start.py
-```
-
-Or follow the manual setup:
-
-1. Create and activate the Conda environment:
+2. Create and activate Conda environment
 ```bash
 conda env create -f environment.yml
 conda activate chatplot
 ```
 
-2. Configure environment:
+3. Set up environment variables
 ```bash
-# Windows
-copy .env.example .env
-
-# Linux/macOS
 cp .env.example .env
+# Edit .env with your configuration
 ```
 
-3. Start the application:
+4. Run the application
 ```bash
-# Terminal 1: Start backend
-cd backend
-uvicorn main:app --reload
-
-# Terminal 2: Start frontend
-cd frontend
-npm install
-npm run dev
+python start.py
 ```
 
-## 🏗 Project Structure
+The application will be available at `http://localhost:3000`
+
+## 🏗️ Project Structure
 
 ```
 chatplot/
-├── backend/                 # Backend server
-│   ├── models/             # Database models
-│   ├── services/           # Business logic
-│   │   ├── data_service.py     # Data processing
-│   │   ├── ollama_service.py   # LLM integration
-│   │   └── visualization_service.py  # Chart generation
-│   ├── utils/              # Utility functions
-│   └── main.py            # FastAPI application
-├── frontend/               # Frontend application
+├── backend/
+│   ├── models/          # Database models
+│   ├── services/        # Core services
+│   ├── plugins/         # Plugin system
+│   └── utils/           # Utility functions
+├── frontend/
 │   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── services/      # API services
-│   │   └── App.tsx       # Main application
-│   └── package.json
-├── data/                   # Data storage
-│   ├── uploads/           # User uploads
-│   └── sample/            # Sample datasets
-├── scripts/                # Utility scripts
-├── tests/                  # Test suite
-├── docs/                   # Documentation
-├── environment.yml         # Conda environment
-├── requirements.txt        # Python dependencies
-├── start.py               # Startup script
-└── README.md
+│   │   ├── components/  # React components
+│   │   ├── services/    # API services
+│   │   └── styles/      # CSS styles
+│   └── public/          # Static assets
+├── data/
+│   ├── sample/          # Sample datasets
+│   └── uploads/         # User uploads
+└── docs/               # Documentation
 ```
 
 ## 💻 Development
 
 ### Backend Development
-
-The backend is built with FastAPI and provides:
-- RESTful API endpoints
-- WebSocket connections for real-time updates
-- Data processing and analysis services
-- Visualization generation
-- Health monitoring
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
 ### Frontend Development
-
-The frontend is built with React and TypeScript:
-- Modern UI with Ant Design
-- Interactive data visualization with Plotly
-- Real-time WebSocket communication
-- Responsive design
-
-### Quality Assurance
-
 ```bash
-# Run tests
-pytest
-
-# Code formatting
-black .
-isort .
-
-# Type checking
-mypy .
-
-# Linting
-flake8
-
-# Run all checks
-pre-commit run --all-files
+cd frontend
+npm install
+npm run dev
 ```
 
-### Health Monitoring
-
-```bash
-# Check system health
-python backend/utils/health_check.py
-
-# View health report
-cat health_report.json
-```
-
-## 📊 Supported Visualizations
-
-- Line charts
-- Bar charts
-- Scatter plots
-- Histograms
-- Box plots
-- Violin plots
-- Heatmaps
-- Pie charts
-- Area charts
-- Parallel coordinates
-- Scatter matrix
-- Sunburst diagrams
-
-## 🔧 Configuration
-
-Key configuration options in `.env`:
-
-```env
-# Ollama Configuration
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama2
-
-# Server Configuration
-HOST=0.0.0.0
-PORT=8000
-DEBUG=True
-
-# Data Storage
-UPLOAD_DIR=./data/uploads
-```
+### Plugin Development
+See [Plugin Development Guide](docs/plugin_development.md)
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Install development dependencies (`pre-commit install`)
-4. Make your changes
-5. Run tests and checks (`pytest && pre-commit run --all-files`)
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-## 📝 License
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📚 Documentation
+
+- [API Documentation](docs/api.md)
+- [Plugin Development](docs/plugin_development.md)
+- [Architecture Overview](docs/architecture.md)
+- [User Guide](docs/user_guide.md)
+
+## 🗺️ Roadmap
+
+- [ ] Enhanced natural language processing
+- [ ] Additional visualization types
+- [ ] Real-time collaboration features
+- [ ] Advanced data processing plugins
+- [ ] Mobile application
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- [FastAPI](https://fastapi.tiangolo.com/) - Backend framework
-- [React](https://reactjs.org/) - Frontend framework
-- [Ollama](https://ollama.ai/) - Local LLM technology
-- [Plotly](https://plotly.com/) - Interactive visualizations
-- [Ant Design](https://ant.design/) - UI components
-- [Pandas](https://pandas.pydata.org/) - Data processing
-- [SQLAlchemy](https://www.sqlalchemy.org/) - Database ORM
-
-## 📚 Documentation
-
-For detailed documentation, please visit:
-- [API Documentation](docs/api.md)
-- [User Guide](docs/user-guide.md)
-- [Development Guide](docs/development.md)
-- [Deployment Guide](docs/deployment.md)
-
-## 🚀 Roadmap
-
-- [ ] Support for more data sources
-- [ ] Advanced ML/AI analysis features
-- [ ] Custom visualization templates
-- [ ] Collaborative features
-- [ ] Export to various formats
-- [ ] Plugin system
+- [Ollama](https://ollama.ai/) for the language model
+- [FastAPI](https://fastapi.tiangolo.com/) for the backend framework
+- [React](https://reactjs.org/) for the frontend framework
+- [Plotly](https://plotly.com/) for visualization libraries
 
 ## 📧 Contact
 
-- Project Link: [https://github.com/yourusername/chatplot](https://github.com/yourusername/chatplot)
-- Report Bugs: [Issues](https://github.com/yourusername/chatplot/issues) 
+- Project Lead - [Your Name](mailto:your.email@example.com)
+- Project Website: [https://chatplot.example.com](https://chatplot.example.com)
+
+---
+
+<div align="center">
+Made with ❤️ by the ChatPlot Team
+</div> 
