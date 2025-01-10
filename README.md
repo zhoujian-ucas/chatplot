@@ -157,8 +157,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- Project Lead - [Your Name](mailto:your.email@example.com)
-- Project Website: [https://chatplot.example.com](https://chatplot.example.com)
+- Project Lead - [Jian Zhou](mailto:zhouj@ucas.ac.cn)
 
 ---
 
