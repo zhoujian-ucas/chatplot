@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![ChatPlot Logo](assets/logo.png)
+![ChatPlot Logo](docs/images/logo.png)
 
 [![Python Version](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
 [![React](https://img.shields.io/badge/react-18.2.0-61dafb.svg)](https://reactjs.org/)
