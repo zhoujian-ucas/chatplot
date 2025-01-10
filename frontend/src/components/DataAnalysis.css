@@ -1,0 +1,49 @@
+.analysis-container {
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  min-height: calc(100vh - 96px);
+}
+
+.ant-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ant-card-head {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  background: #fafafa;
+}
+
+.ant-upload-list {
+  margin-top: 16px;
+}
+
+.visualization-container {
+  height: 400px;
+  margin: 20px 0;
+}
+
+.insights-container {
+  margin-top: 20px;
+}
+
+.insights-container h4 {
+  margin-bottom: 12px;
+  color: #1890ff;
+}
+
+.insights-container ul {
+  padding-left: 20px;
+}
+
+.insights-container li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.ant-space {
+  width: 100%;
+} 
