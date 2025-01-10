@@ -1,156 +1,249 @@
-# ChatPlot - Ollama-Powered Chat Data Analysis
+# ChatPlot
 
-An interactive data analysis tool that combines chat interface with data visualization, powered by Ollama local LLM.
+<div align="center">
 
-## Features
+![ChatPlot Logo](docs/images/logo.png)
 
-- Natural language chat interface with Ollama LLM
-- Automatic data analysis based on chat context
-- Real-time data visualization with multiple chart types
-- Local data storage and management
-- Support for various file formats (CSV, Excel, JSON)
-- Interactive data exploration and analysis
-- Customizable visualization options
-- Historical chat and analysis tracking
+[![Python Version](https://img.shields.io/badge/python-3.10-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Prerequisites
+</div>
 
-- Python 3.8+
-- Ollama installed locally (with llama2 model)
-- Node.js and npm (for frontend)
-- Modern web browser
+ChatPlot is an intelligent data analysis and visualization platform that combines natural language chat interface with powerful data processing capabilities. It enables users to analyze and visualize data through intuitive conversations, powered by Ollama's local LLM technology.
 
-## Installation
+## ✨ Features
+
+### 🤖 Intelligent Chat Interface
+- Natural language data analysis queries
+- Context-aware conversations
+- Automated insights generation
+- Smart visualization suggestions
+
+### 📊 Advanced Data Analysis
+- Support for multiple data formats (CSV, Excel, JSON)
+- Automated data cleaning and preprocessing
+- Statistical analysis and pattern detection
+- Correlation analysis and trend identification
+
+### 📈 Interactive Visualizations
+- Real-time interactive charts
+- Multiple visualization types
+- Customizable chart options
+- Export capabilities
+
+### 🛠 Technical Features
+- Local LLM integration with Ollama
+- Real-time data processing
+- Automated health monitoring
+- Cross-platform compatibility
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- [Anaconda](https://www.anaconda.com/download) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+- [Git](https://git-scm.com/downloads)
+- [Ollama](https://ollama.ai/download) with llama2 model
+
+### Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/chatplot.git
-   cd chatplot
-   ```
+```bash
+git clone https://github.com/yourusername/chatplot.git
+cd chatplot
+```
 
-2. Set up Python virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-   ```
+2. One-click setup and run:
+```bash
+python start.py
+```
 
-3. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Or follow the manual setup:
 
-4. Install frontend dependencies:
-   ```bash
-   cd frontend
-   npm install
-   cd ..
-   ```
+1. Create and activate the Conda environment:
+```bash
+conda env create -f environment.yml
+conda activate chatplot
+```
 
-5. Configure environment variables:
-   - Copy `.env.example` to `.env`
-   - Modify settings as needed
+2. Configure environment:
+```bash
+# Windows
+copy .env.example .env
 
-6. Generate sample data (optional):
-   ```bash
-   python backend/scripts/generate_sample_data.py
-   ```
+# Linux/macOS
+cp .env.example .env
+```
 
-## Running the Application
+3. Start the application:
+```bash
+# Terminal 1: Start backend
+cd backend
+uvicorn main:app --reload
 
-1. Start the Ollama server:
-   ```bash
-   ollama run llama2
-   ```
+# Terminal 2: Start frontend
+cd frontend
+npm install
+npm run dev
+```
 
-2. Start the backend server:
-   ```bash
-   cd backend
-   python main.py
-   ```
-
-3. Start the frontend development server:
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-
-4. Open your browser and navigate to `http://localhost:3000`
-
-## Project Structure
+## 🏗 Project Structure
 
 ```
 chatplot/
-├── backend/
-│   ├── main.py              # FastAPI application
-│   ├── config.py            # Configuration management
-│   ├── database.py          # Database session management
-│   ├── models/              # SQLAlchemy models
-│   ├── services/            # Business logic services
-│   ├── utils/               # Utility functions
-│   ├── scripts/             # Utility scripts
-│   └── data/                # Data storage
-│       ├── sample/          # Sample datasets
-│       └── uploads/         # User uploads
-├── frontend/
+├── backend/                 # Backend server
+│   ├── models/             # Database models
+│   ├── services/           # Business logic
+│   │   ├── data_service.py     # Data processing
+│   │   ├── ollama_service.py   # LLM integration
+│   │   └── visualization_service.py  # Chart generation
+│   ├── utils/              # Utility functions
+│   └── main.py            # FastAPI application
+├── frontend/               # Frontend application
 │   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── services/        # API services
-│   │   └── utils/           # Utility functions
-│   ├── public/              # Static assets
+│   │   ├── components/    # React components
+│   │   ├── services/      # API services
+│   │   └── App.tsx       # Main application
 │   └── package.json
-├── requirements.txt         # Python dependencies
+├── data/                   # Data storage
+│   ├── uploads/           # User uploads
+│   └── sample/            # Sample datasets
+├── scripts/                # Utility scripts
+├── tests/                  # Test suite
+├── docs/                   # Documentation
+├── environment.yml         # Conda environment
+├── requirements.txt        # Python dependencies
+├── start.py               # Startup script
 └── README.md
 ```
 
-## Usage
+## 💻 Development
 
-1. **Chat Interface**
-   - Start a conversation with the AI assistant
-   - Ask questions about your data
-   - Request specific analyses or visualizations
+### Backend Development
 
-2. **Data Analysis**
-   - Upload your data files (CSV, Excel, JSON)
-   - Get automatic analysis and insights
-   - Explore different visualization options
+The backend is built with FastAPI and provides:
+- RESTful API endpoints
+- WebSocket connections for real-time updates
+- Data processing and analysis services
+- Visualization generation
+- Health monitoring
 
-3. **Visualization**
-   - View generated charts and graphs
-   - Customize visualization parameters
-   - Export visualizations
+### Frontend Development
 
-## Supported Data Formats
+The frontend is built with React and TypeScript:
+- Modern UI with Ant Design
+- Interactive data visualization with Plotly
+- Real-time WebSocket communication
+- Responsive design
 
-- CSV files
-- Excel files (XLSX, XLS)
-- JSON files
-- Text files with structured data
+### Quality Assurance
 
-## Supported Chart Types
+```bash
+# Run tests
+pytest
+
+# Code formatting
+black .
+isort .
+
+# Type checking
+mypy .
+
+# Linting
+flake8
+
+# Run all checks
+pre-commit run --all-files
+```
+
+### Health Monitoring
+
+```bash
+# Check system health
+python backend/utils/health_check.py
+
+# View health report
+cat health_report.json
+```
+
+## 📊 Supported Visualizations
 
 - Line charts
 - Bar charts
 - Scatter plots
-- Pie charts
-- Heatmaps
-- Box plots
 - Histograms
+- Box plots
+- Violin plots
+- Heatmaps
+- Pie charts
+- Area charts
+- Parallel coordinates
+- Scatter matrix
+- Sunburst diagrams
 
-## Contributing
+## 🔧 Configuration
+
+Key configuration options in `.env`:
+
+```env
+# Ollama Configuration
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama2
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+DEBUG=True
+
+# Data Storage
+UPLOAD_DIR=./data/uploads
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Install development dependencies (`pre-commit install`)
+4. Make your changes
+5. Run tests and checks (`pytest && pre-commit run --all-files`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
 
-## License
+## 📝 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- Ollama team for providing the local LLM capability
-- FastAPI for the powerful Python web framework
-- React and Ant Design for the frontend components
-- ECharts for the visualization library 
+- [FastAPI](https://fastapi.tiangolo.com/) - Backend framework
+- [React](https://reactjs.org/) - Frontend framework
+- [Ollama](https://ollama.ai/) - Local LLM technology
+- [Plotly](https://plotly.com/) - Interactive visualizations
+- [Ant Design](https://ant.design/) - UI components
+- [Pandas](https://pandas.pydata.org/) - Data processing
+- [SQLAlchemy](https://www.sqlalchemy.org/) - Database ORM
+
+## 📚 Documentation
+
+For detailed documentation, please visit:
+- [API Documentation](docs/api.md)
+- [User Guide](docs/user-guide.md)
+- [Development Guide](docs/development.md)
+- [Deployment Guide](docs/deployment.md)
+
+## 🚀 Roadmap
+
+- [ ] Support for more data sources
+- [ ] Advanced ML/AI analysis features
+- [ ] Custom visualization templates
+- [ ] Collaborative features
+- [ ] Export to various formats
+- [ ] Plugin system
+
+## 📧 Contact
+
+- Project Link: [https://github.com/yourusername/chatplot](https://github.com/yourusername/chatplot)
+- Report Bugs: [Issues](https://github.com/yourusername/chatplot/issues) 
